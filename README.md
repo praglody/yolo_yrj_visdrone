@@ -3,5 +3,7 @@
 ## 训练
 
 ```shell
-python train.py --weights yolov5m.pt --cfg models/yolov5m_visdrone.yaml --data data/VisDrone.yaml --epochs 1 --batch-size 64 --img-size 640 --device 0
+python train.py --weights yolov5m.pt --cfg models/yolov5m_visdrone.yaml \
+        --data data/VisDrone.yaml --hyp data/hyps/hyp_yrj_visdrone.yaml  \
+        --epochs 1 --batch-size 64 --img-size 640 --device 0
 ```
