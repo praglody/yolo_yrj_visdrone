@@ -28,8 +28,8 @@ def visdrone2yolo(dir):
                     fl.writelines(lines)  # write label.txt
 
 
-root = os.path.dirname(os.path.realpath(__file__))
-dir = root + os.sep + "dataset" + os.sep + "VisDrone"
+root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+dir = root + os.sep + "datasets" + os.sep + "VisDrone"
 for fold in os.listdir(dir):
     if fold[0:8] == "VisDrone":
         visdrone2yolo(dir + os.sep + fold)
