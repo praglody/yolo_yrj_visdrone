@@ -139,6 +139,28 @@ class C3(nn.Module):
         return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), dim=1))
 
 
+class C3_NEW(nn.Module):
+    # CSP Bottleneck with 3 convolutions
+    def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):  # ch_in, ch_out, number, shortcut, groups, expansion
+        super().__init__()
+        c_ = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, c_, 1, 1)
+        self.cv2 = Conv(c1, c_, 1, 1)
+        self.cv3 = Conv(2 * c_, c2, 1)  # act=FReLU(c2)
+        self.m = nn.Sequential(*(Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)))
+        # self.m = nn.Sequential(*[CrossConv(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)])
+        self.scSE = scSE(c2, c2)
+
+    def forward(self, x):
+        x = self.cv3(
+            torch.cat(
+                (self.m(self.cv1(x)), self.cv2(x)),
+                dim=1
+            )
+        )
+        return self.scSE(x)
+
+
 class C3TR(C3):
     # C3 module with TransformerBlock()
     def __init__(self, c1, c2, n=1, shortcut=True, g=1, e=0.5):
@@ -675,3 +697,43 @@ class Classify(nn.Module):
     def forward(self, x):
         z = torch.cat([self.aap(y) for y in (x if isinstance(x, list) else [x])], 1)  # cat if list
         return self.flat(self.conv(z))  # flatten to x(b,c2)
+
+
+class sSE(nn.Module):
+    def __init__(self, in_channels):
+        super().__init__()
+        self.Conv1x1 = nn.Conv2d(in_channels, 1, kernel_size=1, bias=False)
+        self.norm = nn.Sigmoid()
+
+    def forward(self, U):
+        q = self.Conv1x1(U)  # U:[bs,c,h,w] to q:[bs,1,h,w]
+        q = self.norm(q)
+        return U * q  # 广播机制
+
+
+class cSE(nn.Module):
+    def __init__(self, in_channels):
+        super().__init__()
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
+        self.Conv_Squeeze = nn.Conv2d(in_channels, in_channels // 2, kernel_size=1, bias=False)
+        self.Conv_Excitation = nn.Conv2d(in_channels // 2, in_channels, kernel_size=1, bias=False)
+        self.norm = nn.Sigmoid()
+
+    def forward(self, U):
+        z = self.avgpool(U)  # shape: [bs, c, h, w] to [bs, c, 1, 1]
+        z = self.Conv_Squeeze(z)  # shape: [bs, c/2]
+        z = self.Conv_Excitation(z)  # shape: [bs, c]
+        z = self.norm(z)
+        return U * z.expand_as(U)
+
+
+class scSE(nn.Module):
+    def __init__(self, c1, c2):
+        super().__init__()
+        self.cSE = cSE(c1)
+        self.sSE = sSE(c1)
+
+    def forward(self, U):
+        U_sse = self.sSE(U)
+        U_cse = self.cSE(U)
+        return U_cse + U_sse
