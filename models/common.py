@@ -44,7 +44,27 @@ class Conv(nn.Module):
         self.act = nn.SiLU() if act is True else (act if isinstance(act, nn.Module) else nn.Identity())
 
     def forward(self, x):
-        return self.act(self.bn(self.conv(x)))
+        x = self.act(self.bn(self.conv(x)))
+        return x
+
+    def forward_fuse(self, x):
+        return self.act(self.conv(x))
+
+class Conv_print_info(nn.Module):
+    # Standard convolution
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, act=True):  # ch_in, ch_out, kernel, stride, padding, groups
+        super().__init__()
+        self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p), groups=g, bias=False)
+        self.bn = nn.BatchNorm2d(c2)
+        self.act = nn.SiLU() if act is True else (act if isinstance(act, nn.Module) else nn.Identity())
+        # self.param = "\n\tc1:%d, c2:%d, k:%d, s:%d, p:%d" % (c1, c2, k, s, autopad(k, p))
+
+    def forward(self, x):
+        # in_shape = x.shape
+        x = self.act(self.bn(self.conv(x)))
+        # print(self.__class__.__name__,
+        #       "input: [%d,%d,%d], output: [%d,%d,%d]" % (in_shape[1],in_shape[2],in_shape[3], x.shape[1], x.shape[2], x.shape[3]), self.param)
+        return x
 
     def forward_fuse(self, x):
         return self.act(self.conv(x))
@@ -102,7 +122,12 @@ class Bottleneck(nn.Module):
         self.add = shortcut and c1 == c2
 
     def forward(self, x):
-        return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
+        if self.add:
+            t = self.cv2(self.cv1(x))
+            r = x + t
+        else:
+            r = self.cv2(self.cv1(x))
+        return r
 
 
 class BottleneckCSP(nn.Module):
@@ -134,9 +159,17 @@ class C3(nn.Module):
         self.cv3 = Conv(2 * c_, c2, 1)  # act=FReLU(c2)
         self.m = nn.Sequential(*(Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)))
         # self.m = nn.Sequential(*[CrossConv(c_, c_, 3, 1, g, 1.0, shortcut) for _ in range(n)])
+        # self.param = "\n\tc1:%d, c2:%d, n:%d" % (c1, c2, n)
+
 
     def forward(self, x):
-        return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), dim=1))
+        # in_shape = x.shape
+        x = self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), dim=1))
+        # print(self.__class__.__name__,
+        #       "input: [%d,%d,%d], output: [%d,%d,%d]" % (
+        #       in_shape[1], in_shape[2], in_shape[3], x.shape[1], x.shape[2], x.shape[3]),
+        #       self.param)
+        return x
 
 
 class C3_NEW(nn.Module):
