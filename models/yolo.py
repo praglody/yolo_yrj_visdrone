@@ -257,7 +257,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
 
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
         if m in [Conv, Conv_print_info, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
-                 BottleneckCSP, C3, C3_NEW, C3TR, C3SPP, C3Ghost]:
+                 BottleneckCSP, C3, C3_NEW, C3TR, C3SPP, C3Ghost, scSE]:
             c1, c2 = ch[f], args[0]
             if c2 != no:  # if not output   c2是第一个参数，为什么要c2不等于no呢，no：number of outputs
                 # make_divisible的作用是确保经过gw调整之后的c2是8的倍数
