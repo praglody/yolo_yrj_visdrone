@@ -183,6 +183,7 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
 
     # Scheduler
     if opt.cos_lr:
+        # 余弦学习率衰减
         lf = one_cycle(1, hyp['lrf'], epochs)  # cosine 1->hyp['lrf']
     else:
         lf = lambda x: (1 - x / epochs) * (1.0 - hyp['lrf']) + hyp['lrf']  # linear
