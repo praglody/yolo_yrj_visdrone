@@ -85,11 +85,14 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
     # Save run settings
     if not evolve:
         with open(save_dir / 'hyp.yaml', 'w') as f:
+            print(hyp)
             yaml.safe_dump(hyp, f, sort_keys=False)
         with open(save_dir / 'opt.yaml', 'w') as f:
+            print(save_dir / 'opt.yaml')
             yaml.safe_dump(vars(opt), f, sort_keys=False)
-        with open(save_dir / 'cfg.yaml', 'w') as f:
-            f.write(Path(cfg).read_text())      # 保存网络结构文件
+        if cfg:
+            with open(save_dir / 'cfg.yaml', 'w') as f:
+                f.write(Path(cfg).read_text())      # 保存网络结构文件
 
     # Loggers
     data_dict = None
