@@ -91,8 +91,8 @@ def train(hyp,  # path/to/hyp.yaml or hyp dictionary
             print(save_dir / 'opt.yaml')
             yaml.safe_dump(vars(opt), f, sort_keys=False)
         if cfg:
-            with open(save_dir / 'cfg.yaml', 'w') as f:
-                f.write(Path(cfg).read_text())      # 保存网络结构文件
+            with open(save_dir / 'cfg.yaml', 'w', encoding="utf-8") as f:
+                f.write(Path(cfg).read_text(encoding="utf-8"))      # 保存网络结构文件
 
     # Loggers
     data_dict = None
