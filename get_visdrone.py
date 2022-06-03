@@ -33,7 +33,7 @@ urls = ['https://github.com/ultralytics/yolov5/releases/download/v1.0/VisDrone20
         'https://github.com/ultralytics/yolov5/releases/download/v1.0/VisDrone2019-DET-val.zip',
         'https://github.com/ultralytics/yolov5/releases/download/v1.0/VisDrone2019-DET-test-dev.zip',
         'https://github.com/ultralytics/yolov5/releases/download/v1.0/VisDrone2019-DET-test-challenge.zip']
-download(urls, dir=dir)
+download(urls, dir=dir, delete=False)
 
 # Convert
 for d in 'VisDrone2019-DET-train', 'VisDrone2019-DET-val', 'VisDrone2019-DET-test-dev':
