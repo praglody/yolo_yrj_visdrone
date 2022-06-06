@@ -3,6 +3,8 @@ import random
 import cv2
 from utils.general import os, Path
 
+# txt标签内容为：
+# <bbox_left>,<bbox_top>,<bbox_width>,<bbox_height>,<score>,<object_category>,<truncation>,<occlusion>
 cls_name = ['pedestrian', 'people', 'bicycle', 'car', 'van', 'truck', 'tricycle', 'awning-tricycle', 'bus', 'motor']
 cls_count = {0: 79337, 1: 27059, 2: 10480, 3: 144867, 4: 24956, 5: 12875, 6: 4812, 7: 3246, 8: 5926, 9: 29647}
 enhance_cls = [2, 5, 6, 7, 8]
@@ -104,7 +106,7 @@ def visdrone2yolo(dir):
             label_list = []
             lines = []
             for row in [x.split(',') for x in file.read().strip().splitlines()]:
-                row = [int(x) for x in row]
+                row = [int(x) for x in row[0:6]]
                 if row[4] == 0:  # VisDrone 'ignored regions' class 0
                     continue
                 cls = int(row[5]) - 1
