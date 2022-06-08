@@ -48,7 +48,6 @@ def val_start_position(label_list, x01, y01, x02, y02):
 
 def enhance_data(label_list, img_size, src_img):
     label_list_clone = label_list.copy()
-
     for lab in label_list_clone:
         if lab[0] not in enhance_cls:
             continue
@@ -66,9 +65,9 @@ def enhance_data(label_list, img_size, src_img):
                     label_list.append([lab[0], x1, y1, lab[3], lab[4]])
                     sx1, sy1, sx2, sy2 = lab[1], lab[2], lab[1] + lab[3], lab[2] + lab[4]
                     src_block = src_img[sy1:sy2, sx1:sx2].copy()
-                    rd = random.randint(-1, 2)  # 对图像做翻转
-                    if rd != 2:
-                        src_block = cv2.flip(src_block, rd)
+                    # rd = random.randint(-1, 2)  # 对图像做翻转
+                    # if rd != 2:
+                    #     src_block = cv2.flip(src_block, rd)
                     src_img[y1:y2, x1:x2] = src_block
                     break
             # if j == 0:
@@ -85,7 +84,6 @@ def enhance_data(label_list, img_size, src_img):
 
 def view_images(dir):
     from tqdm import tqdm
-
     def convert_box(size, box):
         # Convert VisDrone box to YOLO xywh box
         # size (w, h)
@@ -96,21 +94,24 @@ def view_images(dir):
         return (box[0] + box[2] / 2) * dw, (box[1] + box[3] / 2) * dh, box[2] * dw, box[3] * dh
 
     def anti_convert_box(size, box):
+        box = [float(x) for x in box]
         bw = size[0] * box[2]
         bh = size[1] * box[3]
         bx = size[0] * box[0] - bw / 2
         by = size[1] * box[1] - bh / 2
-        return (bx, by, bw, bh)
+        return [round(x) for x in [bx, by, bw, bh]]
 
     pbar = tqdm((dir / 'labels').glob('*.txt'), desc=f'Converting {dir}')
     for f in pbar:
         src_img = cv2.imread(str((dir / 'images' / f.name).with_suffix('.jpg')))
         img_size = (src_img.shape[1], src_img.shape[0])
         with open(f, 'r') as file:  # read annotation.txt
-            for row in [x.split(',') for x in file.read().strip().splitlines()]:
+            for row in [x.split(' ') for x in file.read().strip().splitlines()]:
                 row = [x.strip() for x in row]
                 frame = anti_convert_box(img_size, row[1:])
                 cv2.rectangle(src_img, (frame[0], frame[1]), (frame[0] + frame[2], frame[1] + frame[3]), (0, 255, 0), 1)
+                cv2.putText(src_img, cls_name[int(row[0])], (frame[0], frame[1] - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.75,
+                            (0, 0, 255), 2)
         cv2.imshow("src_img", src_img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
