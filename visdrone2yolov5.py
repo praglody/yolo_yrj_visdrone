@@ -115,7 +115,7 @@ def visdrone2yolo(dir):
             label_list = enhance_data(label_list, img_size, src_img)
             for lab in label_list:
                 box = convert_box(img_size, tuple(map(int, lab[1:5])))
-                lines.append(f"{cls} {' '.join(f'{x:.6f}' for x in box)}\n")
+                lines.append(f"{lab[0]} {' '.join(f'{x:.6f}' for x in box)}\n")
             label_path = str(f).replace(os.sep + 'annotations' + os.sep, os.sep + 'labels' + os.sep)
             label_path = label_path.replace(os.sep + 'VisDrone' + os.sep, os.sep + 'VisDronePro' + os.sep)
             with open(label_path, 'w') as fl:
